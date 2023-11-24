@@ -1,6 +1,7 @@
 import ColorPicker from "./lib/color-picker.js";
 import Frag from "./lib/frag.js";
 import { parseDegree } from "./lib/parse-degree.js";
+import { parseLat, parseLon } from "./lib/parse-lat-lon.js";
 import { calcAzimuth, haversine } from "./lib/sphere-math.js";
 import { D180, D360, D90, DEG } from "./lib/trig.js";
 
@@ -9,8 +10,12 @@ const lopArr = [];
 let minErrDif = 0;
 let minErrColor = '#fff';
 
+const toRadian = (degree) => {
+	return degree/180*Math.PI;
+}
+
 const parseDegToRadian = (string) => {
-	return parseDegree(string)/180*Math.PI;
+	return toRadian(parseDegree(string));
 };
 
 const loadImage = (src) => new Promise((done, fail) => {
@@ -63,8 +68,8 @@ const loadInput = () => {
 		};
 		line.split(/\s*,\s*/).forEach((item) => {
 			const [ key, val ] = item.split(/\s*=\s*/);
-			if (key === 'lat') input.latLon[0] = parseDegToRadian(val);
-			if (key === 'lon') input.latLon[1] = parseDegToRadian(val);
+			if (key === 'lat') input.latLon[0] = toRadian(parseLat(val));
+			if (key === 'lon') input.latLon[1] = toRadian(parseLon(val));
 			if (key === 'rad') input.rad = parseDegToRadian(val);
 			if (key === 'azm') input.azm = parseDegToRadian(val);
 			if (key === 'dif') input.dif = parseDegToRadian(val);
