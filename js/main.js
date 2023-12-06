@@ -1,8 +1,10 @@
 import ColorPicker from "./lib/color-picker.js";
 import Frag from "./lib/frag.js";
+import { mat3 } from "./lib/mat3.js";
 import { parseDegree } from "./lib/parse-degree.js";
 import { parseLat, parseLon } from "./lib/parse-lat-lon.js";
-import { calcAzimuth, haversine } from "./lib/sphere-math.js";
+import { buildRollMat, calcAzimuth, haversine, latLonToVec3, vec3ToLatLon } from "./lib/sphere-math.js";
+import { equirectangular, orthographic } from "./lib/sphere-projections.js";
 import { D180, D360, D90, DEG } from "./lib/trig.js";
 
 const canvas = document.querySelector('canvas');
@@ -81,13 +83,33 @@ const loadInput = () => {
 
 loadInput();
 
+const projection = orthographic;
+let world = mat3();
+
+const transformCoord = (coord, mat) => {
+	const vec = latLonToVec3(coord);
+	vec.mulMat(mat, vec);
+	return vec3ToLatLon(vec);
+};
+
+const normalToCoord = (normal) => {
+	const latLon = projection.toLatLon(normal);
+	return transformCoord(latLon, world);
+};
+
+canvas.height = Math.round(canvas.width/projection.ratio);
+
 const frag = new Frag({
 	canvas,
 	fragColor: (x, y) => {
 		if (x < 0 || x > 1 || y < 0 || y > 1) {
 			return '#000';
 		}
-		const coord = [ y*D180 - D90, x*D360 - D180 ];
+		const coord = normalToCoord([ x, y ]);
+		if (isNaN(coord[0]) || isNaN(coord[1])) {
+			return '#000';
+		}
+		const [ nx, ny ] = equirectangular.toNormal(coord);
 		let sumErr = 0;
 		let errCount = 0;
 		let color = null;
@@ -120,13 +142,12 @@ const frag = new Frag({
 		if (color !== null) {
 			return color;
 		}
-		const col = x*img.width|0;
-		const row = (1 - y)*img.height|0;
+		const col = nx*img.width|0;
+		const row = (1 - ny)*img.height|0;
 		return colorPicker.getRgbString(row, col);
 	},
 });
 
-frag.bindMove();
 frag.bindZoom();
 
 textarea.oninput = () => {
@@ -141,4 +162,29 @@ canvas.addEventListener('dblclick', e => {
 	const lat = ny*D180 - D90;
 	const lon = nx*D360 - D180;
 	document.querySelector('input').value = [ lat, lon ].map(val => val/Math.PI*180);
+});
+
+let click = null;
+canvas.addEventListener('mousedown', e => {
+	if (e.button !== 0) return;
+	if (e.ctrlKey) return;
+	if (e.shiftKey) return;
+	if (e.altKey) return;
+	const normal = frag.valueOf(e.offsetX, e.offsetY);
+	const coord = transformCoord(projection.toLatLon(normal), world);
+	click = { coord, world };
+});
+
+canvas.addEventListener('mousemove', e => {
+	if (click === null) return;
+	const normal = frag.valueOf(e.offsetX, e.offsetY);
+	const coord = transformCoord(projection.toLatLon(normal), click.world);
+	const rollMat = buildRollMat(coord, click.coord);
+	world = click.world.mulMat(rollMat);
+	frag.render();
+});
+
+window.addEventListener('mouseup', e => {
+	if (e.button !== 0) return;
+	click = null;
 });
