@@ -1,10 +1,10 @@
-import ColorPicker from "./lib/color-picker.js";
-import Frag from "./lib/frag.js";
-import { mat3 } from "./lib/mat3.js";
-import { parseDegree } from "./lib/parse-degree.js";
-import { parseLat, parseLon } from "./lib/parse-lat-lon.js";
-import { buildRollMat, calcAzimuth, haversine, latLonToVec3, vec3ToLatLon } from "./lib/sphere-math.js";
-import { equirectangular, orthographic } from "./lib/sphere-projections.js";
+import ColorPicker from "./lib/js/color-picker.js";
+import Frag from "./lib/js/frag.js";
+import { mat3 } from "./lib/js/mat3.js";
+import { parseDegree } from "./lib/js/parse-degree.js";
+import { parseLat, parseLon } from "./lib/js/parse-lat-lon.js";
+import { buildRollMat, calcAzimuth, haversine, latLonToVec3, vec3ToLatLon } from "./lib/js/sphere-math.js";
+import { equirectangular, orthographic } from "./lib/js/sphere-projections.js";
 
 const canvas = document.querySelector('canvas');
 const lopArr = [];
