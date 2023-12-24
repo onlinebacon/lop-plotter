@@ -3,7 +3,7 @@ import Frag from "./lib/js/frag.js";
 import { mat3 } from "./lib/js/mat3.js";
 import { parseDegree } from "./lib/js/parse-degree.js";
 import { parseLat, parseLon } from "./lib/js/parse-lat-lon.js";
-import { buildRollMat, calcAzimuth, haversine, latLonToVec3, vec3ToLatLon } from "./lib/js/sphere-math.js";
+import { buildRollMat, calcAzimuth, haversine, latLonIsValid, latLonToVec3, vec3ToLatLon } from "./lib/js/sphere-math.js";
 import { equirectangular, orthographic } from "./lib/js/sphere-projections.js";
 
 const canvas = document.querySelector('canvas');
@@ -168,6 +168,9 @@ canvas.addEventListener('mousedown', e => {
 	if (e.altKey) return;
 	const normal = frag.valueOf(e.offsetX, e.offsetY);
 	const coord = transformCoord(projection.toLatLon(normal), world);
+	if (!latLonIsValid(coord)) {
+		return;
+	}
 	click = { coord, world };
 });
 
@@ -175,6 +178,9 @@ canvas.addEventListener('mousemove', e => {
 	if (click === null) return;
 	const normal = frag.valueOf(e.offsetX, e.offsetY);
 	const coord = transformCoord(projection.toLatLon(normal), click.world);
+	if (!latLonIsValid(coord)) {
+		return;
+	}
 	const rollMat = buildRollMat(coord, click.coord);
 	world = click.world.mulMat(rollMat);
 	frag.render();
