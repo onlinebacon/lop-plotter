@@ -5,7 +5,6 @@ import { parseDegree } from "./lib/parse-degree.js";
 import { parseLat, parseLon } from "./lib/parse-lat-lon.js";
 import { buildRollMat, calcAzimuth, haversine, latLonToVec3, vec3ToLatLon } from "./lib/sphere-math.js";
 import { equirectangular, orthographic } from "./lib/sphere-projections.js";
-import { D180, D360, D90, DEG } from "./lib/trig.js";
 
 const canvas = document.querySelector('canvas');
 const lopArr = [];
@@ -33,9 +32,10 @@ const img = await loadImage('img/map.jpg');
 const colorPicker = new ColorPicker(img);
 
 const defInput = `
-	lat=45 23 15.5 N, lon=12 30 42.0 W, rad=71 42 11,  dif=0.5, color=#07f
-	lat=30 57 16.7 S, lon=63 15 22.3 E, azm=183 23 10, dif=0.5, color=#f70
-	min-err dif=1, color=#fff
+	lat: 45 23 15.5 N, lon: 12 30 42.0 W, rad: 71 42 11,  dif: 0.5, color: #07f
+	lat: 30 57 16.7 S, lon: 63 15 22.3 E, azm: 183 23 10, dif: 0.5, color: #f70
+	lat: 30 57 16.7 S, lon: 85 50 30.5 E, azm: 157 32 3,  dif: 0.5, color: #0f7
+	min-err dif: 0.7, color: #fff
 `.trim().split('\n').map(line => line.trim()).join('\n');
 
 const textarea = document.querySelector('textarea');
@@ -52,7 +52,7 @@ const loadInput = () => {
 		if (line.startsWith('min-err')) {
 			line = line.replace('min-err', '').trim();
 			line.split(/\s*,\s*/).forEach(pair => {
-				const [ key, val ] = pair.split(/\s*=\s*/);
+				const [ key, val ] = pair.split(/\s*:\s*/);
 				if (key === 'dif') {
 					minErrDif = parseDegToRadian(val);
 				}
@@ -69,7 +69,7 @@ const loadInput = () => {
 			color: '#fff',
 		};
 		line.split(/\s*,\s*/).forEach((item) => {
-			const [ key, val ] = item.split(/\s*=\s*/);
+			const [ key, val ] = item.split(/\s*:\s*/);
 			if (key === 'lat') input.latLon[0] = toRadian(parseLat(val));
 			if (key === 'lon') input.latLon[1] = toRadian(parseLon(val));
 			if (key === 'rad') input.rad = parseDegToRadian(val);
