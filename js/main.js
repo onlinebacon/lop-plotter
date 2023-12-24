@@ -148,19 +148,15 @@ const frag = new Frag({
 	},
 });
 
-frag.bindZoom();
-
 textarea.oninput = () => {
 	loadInput();
 	frag.render();
 };
 
 canvas.addEventListener('dblclick', e => {
-	const x = e.offsetX;
-	const y = e.offsetY;
-	const [ nx, ny ] = frag.valueOf(x, y);
-	const lat = ny*D180 - D90;
-	const lon = nx*D360 - D180;
+	const normal = frag.valueOf(e.offsetX, e.offsetY);
+	const coord = transformCoord(projection.toLatLon(normal), world);
+	const [ lat, lon ] = coord;
 	document.querySelector('input').value = [ lat, lon ].map(val => val/Math.PI*180);
 });
 
@@ -187,4 +183,14 @@ canvas.addEventListener('mousemove', e => {
 window.addEventListener('mouseup', e => {
 	if (e.button !== 0) return;
 	click = null;
+});
+
+canvas.addEventListener('wheel', e => {
+	if (e.ctrlKey) {
+		return;
+	}
+	e.preventDefault();
+	e.stopPropagation();
+	frag.zoom(1 + e.deltaY/1000, canvas.width/2, canvas.height/2);
+	frag.render();
 });
